@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/abcjs-audio.css">
+    <title>Piano Trainer</title>
+
+    <script src="js/webmidi.iife.min.js"></script>
+    <script src="js/abcjs-basic.js" type="text/javascript"></script>
+    <script src="js/keymap.js"></script>
+    <script src="js/synth.js"></script>
+    <script src="js/lesson.js"></script>
+    <script>
+      window.onload = function(){
+      //initEditor()
+      };
+      
+      /*
+        midiPitches: [ {"cmd": "note","pitch": 67,"volume": 105,"start": 0,"duration": 0.125,"instrument": 0,"startChar": 84,"endChar": 89,"gap": 0},
+                       {"cmd": "note","pitch": 79,"volume": 105,"start": 0,"duration": 0.125,"instrument": 0,"startChar": 84,"endChar": 89,"gap": 0}] 
+      */
+      function showOnkeyBoard(midiPitch, type="click"){
+          midiPitch.forEach((Pitch) => {
+            let duration = Pitch.duration*1000;
+            if (type == "click") { duration = Pitch.duration*1000 * 10}
+            document.getElementById(`${Pitch.pitch}`).classList.add("active");
+            setTimeout(() => {
+                document.getElementById(`${Pitch.pitch}`).classList.remove('active');
+            }, duration);
+          });
+      }
+      function showABC(){
+          if (abc_note.style.display=='none'){
+              abc_note.style.display='';
+          } else {
+              abc_note.style.display='none';
+          }
+      }
+      function showFeedback(){
+          if (clicked_info.style.display=='none'){
+              clicked_info.style.display='';
+              feedback.style.display='';
+              keys.style.display='';
+              beat.style.display='';
+              chords.style.display='';
+          } else {
+              clicked_info.style.display='none';
+              feedback.style.display='none';
+              keys.style.display='none';
+              beat.style.display='none';
+              chords.style.display='none';
+          }
+      }      
+    </script>
+    <script type="module">
+      //https://webmidijs.org/api/classes/InputChannel#event:noteon
+      import Keyboard from "./js/kb.js";
+      let k = new Keyboard();
+      piano.appendChild(k.node);
+
+      function playNotes(pl){
+        ABCJS.synth.playEvent(pl,undefined,1333);
+      }
+
+      function setKeyEvent(){
+        document.querySelectorAll(".key").forEach(key=>{
+            key.addEventListener("mousedown", () => {
+                key.classList.add("active");
+                //console.log('mousedown:',key)
+                let pl=[{"cmd": "note","pitch": `${key.getAttribute('id')}`,"volume": 95,"start": 28,"duration": 0.125,"instrument": 0,"startChar": 188,"endChar": 189, "gap": 0}]
+                playNotes(pl);
+            });
+            key.addEventListener("mouseup", () => {
+                key.classList.remove("active");
+            });
+            key.addEventListener("mouseout", () => {
+                key.classList.remove("active");
+            });            
+        });
+      }
+      
+        
+      WebMidi
+        .enable()
+        .then(onEnabled)
+        .then(setKeyEvent())
+        .then(initEditor())   
+        .catch(err => console.log(err));
+
+      function onEnabled() {
+        var notes=""
+        var holdPedal=false
+        if (WebMidi.inputs.length < 1) {
+            mididevice.innerHTML  = "No device detected.";
+        } else {
+            WebMidi.inputs.forEach((device, index) => {
+                mididevice.innerHTML = `${index}: ${device.name} `;
+            });
+        }
+        
+        const mySynth = WebMidi.inputs[0];
+        // const mySynth = WebMidi.getInputByName("TYPE NAME HERE!")
+
+        mySynth.channels[1].addListener("noteon", e => {
+          notes +=`<span style="font-size: ${e.rawVelocity}px\"> ${e.note.identifier}:${e.note.number}  </span>`;
+          keys.innerHTML = notes;
+          document.getElementById(`${e.note.number}`).classList.add(`level${Math.ceil(e.rawVelocity/22)}`)
+          document.getElementById(`${e.note.number}`).classList.add("active");
+        });
+        mySynth.channels[1].addListener("noteoff", e => {
+          notes = ""
+          if (holdPedal) {
+            document.getElementById(`${e.note.number}`).setAttribute('waitped','yes');
+          } else {
+            document.getElementById(`${e.note.number}`).classList.remove("active", "level1", "level2","level3","level4","level5","level6");
+          }
+        });        
+        mySynth.channels[1].addListener("controlchange", e => {
+            if(e.controller.number == 64) {
+                if(e.value > 0) {
+                    holdPedal= true;
+                    pedal.innerHTML = `↑ Ped *`;
+                } else {
+                    holdPedal = false;
+                    pedal.innerHTML = `↓ Ped`;
+                    document.querySelectorAll("li[waitped='yes']").forEach(key=>{
+                        key.setAttribute('waitped','no');
+                        key.classList.remove("active", "level1", "level2","level3","level4","level5","level6");
+                    });
+                }
+            }        
+        });
+        document.querySelectorAll(".key").forEach(key=>{
+            key.addEventListener("mousedown", () => {
+            key.classList.add("active");
+            });
+        });
+      }
+
+    </script>
+
+  </head>
+
+  <body>
+      <div class="container">
+    <main>
+
+      <div>
+        <button class="start">Start/Pause</button>
+        <button class="warp">Rand. Warp</button>
+        <button class="next">Next Demo</button>
+        <button class="rand">Start from level:</button>
+        <button class="start" style="display:none;">DEF</button>
+        <select class="select" id='diffSet'>
+          <option value ="1">difficulty:1</option>
+          <option value ="2">difficulty:2</option>
+          <option value="3">difficulty:3</option>
+          <option value="4">difficulty:4</option>
+        </select>
+        <select class="select" id='diffQquantity'>
+          <option value ="4">quantity:4</option>
+          <option value ="8" selected>quantity:8</option>
+          <option value="12">quantity:12</option>
+          
+        </select>        
+      </div>
+      <div>
+        <input type="checkbox" name="show ABC editor" value="abcEedit" checked  onclick="showABC()">show ABC editor
+        <input type="checkbox" name="show now play feedback" value="playFeedback"  onclick="showFeedback()"> show feedback
+        <!--input type="checkbox" name="show midiKeyboard input " value="midiInput" >
+        <input type="checkbox" name="show now select note info" value="selectNote" -->
+      </div>      
+      <div>  
+        <p style="display: inline-block";>Speed: <span id='nowspeed'>100</span>%</p>
+        <input type="range" min="1" max="100" value="100" class="slider" id="setSpeed">
+        <p style="display: inline-block";>Midi device: <span id="mididevice">None</span></p>
+        <a href="https://editor.drawthedots.com/" target="_blank"> Editor </a>
+      </div>  
+      
+      <!-- button class="seek">Seek to Middle</button>
+      <button class="next">Next Tune</button>
+        <button class="download" style="display: none;">Download</button>
+        <div class="seek-controls disabled">
+            <label>Seek: <input type="number" min="0" id="seek-amount"></label>
+            <select aria-label="seek units" id="seek-units">
+                <option value="percent">Percent</option>
+                <option value="seconds">Seconds</option>
+                <option value="beats">Beats</option>
+            </select>
+            <button class="seek2">Seek</button>
+            <span id="unit-explanation" class="click-explanation">First start playing to load audio before seeking.</span>
+        </div -->
+        <textarea id="abc_note" cols="90" rows="10" spellcheck="false">
+X: 1
+T: Goldberg_Variations VARIATIO 19  a 1 Clav.
+M: 4/4
+L: 1/8
+R: Bach 
+K: Emin
+|: [Gg]fgd Bded |$ ecAc dcde  | dcBA BcBA | $ fefd Adgf  | gdBd e^deg | 
+    </textarea>
+      <div class="midi" style="display:none;">MIDI</div>
+      <div id="paper"></div>
+      <div id="audio"></div>
+      <p class="beat" id="beat" style="display:none;"></p>
+      <p class="click-explanation" style="display:none;">Click on a note to play that note.</p>
+    </main>
+  </div>
+    <div id="mididevice1" style="display:none;"></div>
+    <div id="piano"></div>
+    <div id="chords" style="display:none;"></div>
+    <div id="pedal">↑ Ped *</div>
+    <div id="keys" style="display:none;"></div>
+    <pre class="clicked-info" id="clicked_info" style="display:none;"></pre>
+    <pre class="feedback" id="feedback" style="display:none;"></pre>
+  </body>
+
+</html>
