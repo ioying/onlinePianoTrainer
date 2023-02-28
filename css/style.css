@@ -1,0 +1,22 @@
+@import url("keyboard.css");
+@import url("https://fonts.googleapis.com/css2?family=Lato&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Lato, sans-serif;
+}
+
+footer {
+  font-size: 80%;
+  margin-top: 3em;
+  padding-top: 1em;
+  text-align: center;
+  border-top: 1px solid #888;
+}
+
+.chord-name {
+  margin-left: 1em;
+}

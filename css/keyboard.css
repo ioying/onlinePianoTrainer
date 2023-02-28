@@ -1,0 +1,60 @@
+.keyboard {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  height: 80px;
+}
+.keyboard .key {
+  border: 1px solid black;
+  --width: 20px;
+  width: var(--width);
+  border-radius: 0 0 3px 3px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 4px;
+  font-size: 9px;
+  cursor: pointer;
+}
+.keyboard .key.white {
+  box-shadow: 0 3px 2px -2px rgba(0, 0, 0, 0.4);
+  color: #000;
+  background-color: #fff;
+}
+.keyboard .key.black {
+  --width: 16px;
+  background-color: #000;
+  color: #fff;
+  margin-left: calc(-1 * var(--width));
+  height: 70%;
+  position: relative;
+  left: calc(var(--width) / 2);
+  box-shadow: 0 3px 2px -2px rgba(0, 0, 0, 0.4);
+}
+.keyboard .key.active{
+  background-color: #888;
+}
+.keyboard .key.active.level1{
+  background-color: #888;
+}
+.keyboard .key.active.level2 {
+  background-color: #a88;
+}
+.keyboard .key.active.level3{
+  background-color: #c88;
+}
+.keyboard .key.active.level4{
+  background-color: #e88;
+}
+.keyboard .key.active.level5 {
+  background-color: #f88;
+}
+.keyboard .key.active.level6 {
+  background-color: #f08;
+}
+/*
+.keyboard .key.active.black {
+  border: 2px solid black;
+}
